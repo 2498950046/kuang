@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="./src/assets/favicon.png" sizes="32x32"/>
+    <link href="https://fonts.font.im/css?family=Raleway" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <script src="https://unpkg.com/neovis.js@2.0.2/dist/neovis.js"></script>
+    <!-- MediaPipe Hands 相关库 -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <!-- Tailwind CDN，仅用于后台页面的设计语言 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // 复用你参考项目中的配色，保证 emerald / slate 语义色一致
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              emerald: {
+                50: '#f0fdf4',
+                100: '#dcfce7',
+                500: '#10b981',
+                600: '#059669',
+                700: '#047857',
+              },
+              slate: {
+                50: '#f8fafc',
+                100: '#f1f5f9',
+                200: '#e2e8f0',
+                400: '#94a3b8',
+                500: '#64748b',
+                600: '#475569',
+                700: '#334155',
+                800: '#1e293b',
+                900: '#0f172a',
+              },
+              red: {
+                50: '#fef2f2',
+                500: '#ef4444',
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <title>矿物信息图谱</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,170 @@
+{
+    "design_system_meta": {
+      "project_name": "VisLabs_Graph_Dashboard",
+      "style_style": "Clean, Modern SaaS, Data Visualization",
+      "purpose": "Provide context for AI to reproduce a visual graph intelligence platform with node-link diagrams and detailed sidebars.",
+      "tech_stack_recommendation": {
+        "framework": "vue",
+        "styling": "Tailwind CSS",
+        "visualization_library": "Vue Flow or D3.js",
+        "icons": "Lucide Vue / Heroicons",
+        "charts": "Recharts or Chart.js"
+      }
+    },
+    "color_palette": {
+      "backgrounds": {
+        "app_bg": "#F3F5F7",
+        "surface_white": "#FFFFFF",
+        "sidebar_bg": "#FFFFFF",
+        "tooltip_bg": "#1F2937"
+      },
+      "text": {
+        "primary": "#111827",
+        "secondary": "#6B7280",
+        "tertiary": "#9CA3AF",
+        "link": "#3B82F6"
+      },
+      "borders": {
+        "light": "#E5E7EB",
+        "focus": "#3B82F6"
+      },
+      "node_categories": {
+        "description": "Colors used for graph nodes based on the legend in the screenshots.",
+        "suppliers_delivery": { "name": "Purple/Delivery", "hex": "#7B61FF", "bg_soft": "#F0EEFF" },
+        "production": { "name": "Blue/Factory", "hex": "#4CB9E7", "bg_soft": "#E0F5FF" },
+        "distribution": { "name": "Green/Shop", "hex": "#A0D968", "bg_soft": "#F2FBE0" },
+        "marketing": { "name": "Pink/Agency", "hex": "#FF85C0", "bg_soft": "#FFF0F6" },
+        "innovation": { "name": "Red/Product", "hex": "#FF7875", "bg_soft": "#FFF1F0" },
+        "central_node": { "name": "Yellow/Company", "hex": "#FFC53D", "bg_soft": "#FFFBE6" }
+      }
+    },
+    "typography": {
+      "font_family": "Inter, system-ui, sans-serif",
+      "scale": {
+        "h1": { "size": "1.5rem", "weight": "600", "line_height": "2rem" },
+        "h2": { "size": "1.25rem", "weight": "600", "line_height": "1.75rem" },
+        "body_main": { "size": "0.875rem", "weight": "400", "line_height": "1.25rem" },
+        "caption": { "size": "0.75rem", "weight": "500", "text_transform": "uppercase" },
+        "node_label": { "size": "0.75rem", "weight": "500", "color": "#4B5563" }
+      }
+    },
+    "layout_structure": {
+      "header": {
+        "height": "64px",
+        "background": "white",
+        "layout": "Flexbox (Space Between)",
+        "elements": [
+          "Logo (Left)",
+          "Document Title (Left)",
+          "Toolbar (Center - Tools, Undo/Redo, Zoom)",
+          "User/Share Actions (Right)"
+        ],
+        "shadow": "sm"
+      },
+      "sidebar_left": {
+        "type": "Floating/Collapsed",
+        "width": "60px",
+        "elements": ["Navigation Icons", "Layers"]
+      },
+      "canvas_area": {
+        "type": "Infinite Pan/Zoom Surface",
+        "background": "Grid dots or solid light gray (#F3F5F7)"
+      },
+      "sidebar_right": {
+        "state": "Contextual (Appears on Node Select)",
+        "width": "380px",
+        "background": "white",
+        "padding": "24px",
+        "shadow": "lg",
+        "border_radius_left": "0px (Full height)"
+      },
+      "legend": {
+        "position": "Bottom Left",
+        "style": "Floating Card",
+        "padding": "16px",
+        "border_radius": "12px",
+        "background": "white"
+      },
+      "controls": {
+        "position": "Bottom Right",
+        "elements": ["Zoom In/Out", "Mini-map Toggle"],
+        "style": "Floating Group button"
+      }
+    },
+    "component_styles": {
+      "nodes": {
+        "shape": "Circle",
+        "size": "48px",
+        "border_width": "0px",
+        "icon_color": "white",
+        "shadow": "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+        "interaction": "Scale 1.05 on hover",
+        "label_position": "Bottom outside",
+        "badge": {
+          "position": "Top Right",
+          "bg": "#F59E0B",
+          "text_color": "white",
+          "shape": "Circle small"
+        }
+      },
+      "edges": {
+        "style": "Straight or Bezier",
+        "color": "#D1D5DB",
+        "width": "1.5px",
+        "arrow_head": "True (End)",
+        "label_style": {
+          "bg": "transparent",
+          "text_color": "#9CA3AF",
+          "font_size": "10px"
+        }
+      },
+      "cards": {
+        "bg": "white",
+        "border_radius": "12px",
+        "shadow": "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
+        "padding": "16px"
+      },
+      "buttons": {
+        "primary": {
+          "bg": "#3B82F6",
+          "text": "white",
+          "radius": "8px"
+        },
+        "icon_btn": {
+          "bg": "transparent",
+          "hover_bg": "#F3F4F6",
+          "radius": "6px"
+        }
+      }
+    },
+    "interactions_and_effects": {
+      "focus_mode": {
+        "description": "See Image 2. When a node is selected or hovered in focus mode.",
+        "active_node": "Opacity 100%, Drop Shadow increased",
+        "related_nodes": "Opacity 100%, Edge Highlighted Blue",
+        "unrelated_nodes": "Opacity 20% (Faded out)",
+        "drill_down": "Expands child nodes dynamically"
+      },
+      "selection_state": {
+        "visual": "Thick Blue (#3B82F6) border or glow around the selected node.",
+        "action": "Opens Right Sidebar Panel"
+      },
+      "charts_style": {
+        "type": "Minimalist",
+        "grid_lines": "Dashed, Light Grey",
+        "colors": ["#7B61FF", "#9CA3AF"],
+        "bar_radius": "4px"
+      }
+    },
+    "iconography": {
+      "style": "Outline / Stroke based",
+      "stroke_width": "1.5px or 2px",
+      "examples": {
+        "factory": "Building icon",
+        "shop": "Shopping Cart",
+        "product": "Rocket",
+        "delivery": "Truck",
+        "agency": "Megaphone"
+      }
+    }
+  }

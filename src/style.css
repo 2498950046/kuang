@@ -1,0 +1,294 @@
+/* src/style.css */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+SC:wght@400;700&display=swap');
+
+:root {
+  --font-sans: 'Cinzel', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  /* 矿物主题色：淡金色/淡橙色 */
+  --accent-color: #d4a574;
+  --accent-color-rgb: 212, 165, 116;
+  --accent-highlight: #e8c9a0;
+  --accent-highlight-rgb: 232, 201, 160;
+  --deep: #7b542f;
+  --earth: #b6771d;
+  --bg-glow: rgba(255, 207, 113, 0.12);
+}
+body.dark-theme {
+  --bg-primary: #1a1611; 
+  --bg-secondary: rgba(30, 26, 20, 0.95); 
+  --bg-tertiary: rgba(35, 30, 24, 0.9);
+  --bg-tertiary-dark: rgba(40, 35, 28, 0.95); 
+  --text-primary: #f5e6d3; 
+  --text-secondary: #e8c9a0; 
+  --text-muted: rgba(245, 230, 211, 0.7);
+  --border-color: rgba(212, 165, 116, 0.4); 
+  --accent-primary: #d4a574; 
+  --accent-secondary: #e8c9a0; 
+  --accent-error: #ff5555;
+  --bg-hover: rgba(212, 165, 116, 0.15);
+  --accent-color-light: rgba(212, 165, 116, 0.2);
+  --sidebar-bg: rgba(30, 26, 20, 0.92);
+  --card-bg: rgba(35, 30, 24, 0.85);
+}
+
+html, body, #app { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; }
+body { 
+  font-family: var(--font-sans); 
+  background: var(--bg-primary);
+  color: var(--text-primary); 
+  transition: background-color 0.3s var(--ease-out), color 0.3s var(--ease-out); 
+}
+
+/* 顶级布局拉满视口，防止留白 */
+html, body, #app { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; }
+#app-container { display: flex; min-height: 100vh; height: 100%; }
+
+.sidebar {
+  width: 320px;
+  flex-shrink: 0; /* 防止侧边栏被压缩 */
+  background: var(--sidebar-bg);
+  backdrop-filter: blur(16px) saturate(180%);
+  border-right: 1.5px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: background-color 0.3s, border-color 0.3s;
+  box-shadow: 0 0 0 1px rgba(212, 165, 116, 0.15);
+}
+.sidebar-section { 
+  padding: 20px; 
+  border-bottom: 1px solid rgba(212, 165, 116, 0.25); 
+}
+.sidebar-section:last-child { border-bottom: none; }
+.resizable-textarea { position: relative; margin-bottom: 10px; }
+.resizable-textarea textarea { 
+  display: block; 
+  width: 100%; 
+  height: 150px; 
+  min-height: 80px; 
+  resize: none; 
+  margin: 0; 
+  padding: 10px; 
+  background: var(--bg-tertiary); 
+  backdrop-filter: blur(12px);
+  color: var(--text-primary); 
+  border: 1.5px solid var(--border-color); 
+  border-radius: 8px; 
+  font-family: 'Courier New', monospace; 
+  box-shadow: 0 0 0 1px rgba(212, 165, 116, 0.15);
+}
+.resizer { width: 100%; height: 10px; background: var(--border-color); position: absolute; right: 0; bottom: 0; cursor: ns-resize; border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;}
+.sidebar-section button { 
+  width: 100%; 
+  padding: 12px; 
+  background: linear-gradient(120deg, var(--accent-primary), var(--accent-secondary)); 
+  color: var(--text-primary); 
+  border: 2px solid var(--accent-secondary); 
+  border-radius: 8px; 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: all 0.3s ease; 
+  margin-top: 10px; 
+  box-shadow: 0 4px 12px rgba(212, 165, 116, 0.25);
+}
+.sidebar-section button:hover { 
+  background: var(--accent-secondary); 
+  box-shadow: 0 6px 20px rgba(212, 165, 116, 0.35);
+  transform: translateY(-1px);
+}
+.overview-list { flex: 1; overflow-y: auto; padding: 20px; }
+.overview-group-header { display: flex; align-items: center; cursor: pointer; font-weight: 600; margin-bottom: 10px; color: var(--text-primary); }
+.overview-group-header .icon { margin-right: 8px; transition: transform 0.2s; color: var(--text-muted); }
+.overview-group-header.collapsed .icon { transform: rotate(-90deg); }
+.overview-item { padding: 8px 0 8px 28px; cursor: pointer; border-radius: 4px; color: var(--text-primary); }
+.overview-item:hover, .overview-item.active { background-color: var(--bg-hover); color: var(--text-primary); }
+.sidebar-section h4 { margin: 0 0 15px 0; color: var(--text-secondary); font-weight: 600; }
+.style-group { margin-bottom: 15px; }
+.style-group label { display: flex; justify-content: space-between; font-weight: 500; margin-bottom: 5px; font-size: 0.9em; }
+.style-group input[type="range"] { width: 100%; }
+
+.main-content { flex: 1; display: flex; flex-direction: column; height: 100%; min-width: 0; /* 防止内容溢出 */ }
+.main-header { 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  padding: 0 24px; 
+  height: 60px; 
+  background: var(--sidebar-bg);
+  backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1.5px solid var(--border-color); 
+  flex-shrink: 0; 
+  transition: background-color 0.3s, border-color 0.3s; 
+  /* box-shadow: 0 0 0 1px rgba(212, 165, 116, 0.15); */
+}
+.main-header .title { font-size: 1.25rem; font-weight: 600; }
+.main-header .tabs { display: flex; gap: 20px; }
+.main-header .tab { padding: 10px; border-bottom: 2px solid transparent; cursor: pointer; color: var(--text-muted); }
+.main-header .tab.active { color: var(--text-secondary); border-bottom-color: var(--text-secondary); }
+.main-header .header-controls { display: flex; align-items: center; gap: 16px; }
+.main-header .control-btn { 
+  background: var(--bg-tertiary); 
+  border: 1.5px solid var(--border-color); 
+  color: var(--text-primary); 
+  padding: 6px; 
+  border-radius: 6px; 
+  cursor: pointer; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  transition: all 0.3s ease; 
+  backdrop-filter: blur(8px);
+}
+.main-header .control-btn:hover { 
+  color: var(--text-secondary); 
+  border-color: var(--accent-primary); 
+  background: var(--bg-hover);
+  box-shadow: 0 0 10px rgba(212, 165, 116, 0.25);
+}
+.main-header .theme-toggle { cursor: pointer; color: var(--text-primary); }
+.graph-wrapper { 
+  flex: 1; 
+  position: relative; 
+  background: var(--bg-primary);
+  transition: background-color 0.3s; 
+}
+
+.dark-theme .graph-wrapper {
+  background: radial-gradient(circle at center, rgba(26, 31, 37, 0.3) 0%, var(--bg-primary) 100%);
+}
+.table-view { padding: 24px; height: calc(100% - 60px); overflow: auto; }
+.table-view table { width: 100%; border-collapse: collapse; }
+.table-view th, .table-view td { padding: 12px 15px; border: 1px solid var(--border-color); text-align: left; }
+.table-view th { background-color: var(--bg-secondary); }
+.markdown-body table {
+  background-color: var(--bg-tertiary); 
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0; 
+}
+
+
+.markdown-body th,
+.markdown-body td {
+  color: var(--text-primary); 
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color); 
+  padding: 8px 12px; 
+}
+
+.markdown-body th {
+  background-color: var(--bg-tertiary-dark);
+  font-weight: bold;
+  text-align: left;
+}
+
+/* === 后台管理 UI 通用样式（来自参考设计） === */
+
+/* 柔和阴影，用于卡片 / 按钮 */
+.soft-shadow {
+  box-shadow:
+    0 10px 30px -5px rgba(0, 0, 0, 0.04),
+    0 4px 12px -4px rgba(0, 0, 0, 0.02);
+}
+
+.soft-shadow-lg {
+  box-shadow:
+    0 20px 50px -12px rgba(0, 0, 0, 0.08);
+}
+
+/* 玻璃拟态块 */
+.glass-light {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+/* 管理侧边栏激活态（如有需要） */
+.nav-active {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  color: #059669;
+}
+
+/* 表格 hover 效果（主要影响后台页的 table） */
+tr {
+  transition: all 0.2s ease;
+}
+
+tr:hover {
+  background-color: #f1f5f9;
+}
+
+/* 自定义滚动条，尽量低侵入 */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+/* 简单入场动画 */
+.animate-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.slide-in-from-top-4 {
+  animation: slideInTop 0.3s ease-out forwards;
+}
+
+@keyframes slideInTop {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.slide-in-from-right {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* 旋转动画，配合加载指示器 */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

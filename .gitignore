@@ -1,0 +1,47 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+3d-force-graph
+
+.env
+
+
+# 忽略特定的文件夹
+
+src/assets/mineral_img_data/
+src/assets/images/
+
+backend_all/backend/image_recognition/mineral_dataset/
+*.bin
+
+
+# 忽略深度学习模型
+*.bin
+*.pth
+*.h5
+
+# 忽略大型 3D 模型文件
+*.glb
+*.obj
+*.gltf
