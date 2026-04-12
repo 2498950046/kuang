@@ -121,6 +121,13 @@
           </div>
         </div>
 
+        <div class="market-action-box" style="margin-top: 24px; text-align: center;">
+          <el-button type="warning" size="large" round @click="openMarketDashboard(resultData.top_prediction)" style="width: 100%; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); font-weight: bold; letter-spacing: 1px;">
+            <el-icon style="margin-right: 6px; font-size: 18px;"><TrendCharts /></el-icon>
+            查看市场价值与推荐拍品走势
+          </el-button>
+        </div>
+
         <div class="disclaimer">⚠️ 本系统识别结果仅供参考，其准确性需送检专业检测机构确认。</div>
       </div>
 
@@ -160,8 +167,25 @@
           </div>
         </div>
         
+        <div v-if="rtResultData && rtResultData.top_prediction" class="market-action-box" style="margin-top: 20px; text-align: center;">
+          <el-button type="warning" size="large" round @click="openMarketDashboard(rtResultData.top_prediction)" style="width: 100%; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); font-weight: bold; letter-spacing: 1px;">
+            <el-icon style="margin-right: 6px; font-size: 18px;"><TrendCharts /></el-icon>
+            查看市场价值与推荐拍品走势
+          </el-button>
+        </div>
+
         <div class="disclaimer">📌 请将需要识别的物体对准摄像头中心，并保持稳定</div>
       </div>
+    </el-dialog>
+
+    <el-dialog
+      title="商业化鉴赏大屏"
+      v-model="marketDialogVisible"
+      width="850px"
+      append-to-body
+      class="mac-el-dialog market-dialog"
+    >
+      <CommodityDashboard :gemData="marketGemData" />
     </el-dialog>
 
   </div>
@@ -169,8 +193,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onBeforeUnmount } from "vue";
-import { UploadFilled, Delete } from "@element-plus/icons-vue"; 
+import { UploadFilled, Delete, TrendCharts } from "@element-plus/icons-vue"; 
 import { ElMessage } from "element-plus";
+import CommodityDashboard from "../components/shangpin/CommodityDashboard.vue";
 
 const emit = defineEmits(['query-mineral']);
 
@@ -200,6 +225,23 @@ const translateGemName = (enName: string | undefined) => {
   return engToChnMap[lowerName] || enName;
 };
 
+// === 🔥 双模式兼容的商品大盘状态逻辑 🔥 ===
+const marketDialogVisible = ref(false);
+const marketGemData = ref<any>(null); // 存储当前需要查看行情的宝石
+
+// 接收模型吐出来的预测英文名，转换为对象并打开大屏
+const openMarketDashboard = (predictionName: string) => {
+  if (!predictionName) return;
+  const cnName = translateGemName(predictionName);
+  marketGemData.value = {
+    name: cnName,
+    type: predictionName,
+    color: '#F59E0B' // 图表默认主题色
+  };
+  marketDialogVisible.value = true;
+};
+// ===========================================
+
 // ================= 类型定义 =================
 interface PredictionItem { label: string; probability: string; score: number; }
 interface ResultData { top_prediction: string; predictions: PredictionItem[]; analysis?: string; }
@@ -214,7 +256,7 @@ const resultData = ref<ResultData | null>(null);
 const form = ref<FormState>({ text: "", file: null });
 
 const isSubmitDisabled = computed(() => {
-  return !form.value.file; // 强制要求必须有图片
+  return !form.value.file; 
 });
 
 const openDialog = () => { dialogVisible.value = true; };
@@ -253,20 +295,15 @@ const handleSubmit = async () => {
   if (form.value.text.trim()) fd.append("text", form.value.text.trim());
 
   try {
-    // 1. fetch 直接传入 URL 和配置对象
     const response = await fetch("http://localhost:8080/api/gem/b3predict", {
       method: "POST",
       body: fd,
-      // ⚠️ 注意：不要在这里写 headers: { 'Content-Type': 'multipart/form-data' }
-      // 浏览器发现 body 是 FormData 时，会自动设置带有 correct boundary 的 Content-Type
     });
 
-    // 2. fetch 判断请求是否成功通常用 response.ok (状态码 200-299)
     if (!response.ok) {
       throw new Error(`网络请求失败，状态码: ${response.status}`);
     }
 
-    // 3. fetch 不像 axios 会自动解析 JSON，必须手动解析
     const data = await response.json();
     resultData.value = data;
     
@@ -368,313 +405,85 @@ onBeforeUnmount(() => { closeRtDialog(); });
 </script>
 
 <style scoped>
-.appreciation-panel {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 40px;
-  overflow-y: auto;
-  background: transparent;
-}
+.appreciation-panel { height: 100%; display: flex; flex-direction: column; padding: 40px; overflow-y: auto; background: transparent; }
 
-/* ================= 欢迎头部 ================= */
-.welcome-section {
-  text-align: center;
-  margin-bottom: 40px;
-}
-.welcome-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-.welcome-section h3 {
-  font-size: 24px;
-  color: var(--chat-text);
-  margin: 0 0 12px 0;
-}
-.welcome-section p {
-  color: var(--chat-text-sub);
-  font-size: 15px;
-  max-width: 600px;
-  margin: 0 auto;
-}
+.welcome-section { text-align: center; margin-bottom: 40px; }
+.welcome-icon { font-size: 48px; margin-bottom: 16px; }
+.welcome-section h3 { font-size: 24px; color: var(--chat-text); margin: 0 0 12px 0; }
+.welcome-section p { color: var(--chat-text-sub); font-size: 15px; max-width: 600px; margin: 0 auto; }
 
-/* ================= 功能卡片 ================= */
-.features-container {
-  display: flex;
-  gap: 24px;
-  justify-content: center;
-  flex-wrap: wrap;
-  max-width: 900px;
-  margin: 0 auto;
-}
+.features-container { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; max-width: 900px; margin: 0 auto; }
 
-.feature-card {
-  flex: 1;
-  min-width: 300px;
-  max-width: 400px;
-  background: var(--panel-bg);
-  border: 1px solid var(--chat-border);
-  border-radius: 20px;
-  padding: 32px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-}
+.feature-card { flex: 1; min-width: 300px; max-width: 400px; background: var(--panel-bg); border: 1px solid var(--chat-border); border-radius: 20px; padding: 32px; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+.feature-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.15); border-color: rgba(255,255,255,0.2); background: rgba(255, 255, 255, 0.05); }
+:global(.dark-theme) .feature-card:hover { background: rgba(255, 255, 255, 0.03); }
 
-.feature-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-  border-color: rgba(255,255,255,0.2);
-  background: rgba(255, 255, 255, 0.05);
-}
+.card-icon-box { width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
+.blue-theme { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.orange-theme { background: rgba(249, 115, 22, 0.15); color: #f97316; }
 
-:global(.dark-theme) .feature-card:hover {
-  background: rgba(255, 255, 255, 0.03);
-}
+.card-content h4 { font-size: 20px; color: var(--chat-text); margin: 0 0 12px 0; }
+.card-content p { color: var(--chat-text-sub); font-size: 14px; line-height: 1.6; margin: 0 0 32px 0; }
 
-.card-icon-box {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 24px;
-}
+.card-action { margin-top: auto; display: flex; align-items: center; justify-content: space-between; color: var(--chat-text); font-weight: 600; font-size: 15px; }
+.feature-card:hover .card-action { color: #3b82f6; }
+.rt-card:hover .card-action { color: #f97316; }
 
-.blue-theme {
-  background: rgba(59, 130, 246, 0.15);
-  color: #3b82f6;
-}
+:deep(.mac-el-dialog) { background: var(--chat-surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 16px; border: 1px solid var(--chat-border); box-shadow: 0 24px 60px rgba(0,0,0,0.4); }
+:deep(.el-dialog__header) { border-bottom: 1px solid var(--chat-border); margin-right: 0; padding: 20px 24px; }
+:deep(.el-dialog__title) { color: var(--chat-text); font-weight: 600; font-size: 16px; }
+:deep(.el-dialog__body) { padding: 24px; color: var(--chat-text); }
+:deep(.el-dialog__footer) { border-top: 1px solid var(--chat-border); padding: 16px 24px; }
+:deep(.el-form-item__label) { color: var(--chat-text); font-weight: 500; }
 
-.orange-theme {
-  background: rgba(249, 115, 22, 0.15);
-  color: #f97316;
-}
+:deep(.el-upload-dragger) { background: rgba(0,0,0,0.1); border: 1px dashed var(--chat-border); border-radius: 12px; transition: all 0.3s; }
+:deep(.el-upload-dragger:hover) { border-color: #3b82f6; background: rgba(59, 130, 246, 0.05); }
 
-.card-content h4 {
-  font-size: 20px;
-  color: var(--chat-text);
-  margin: 0 0 12px 0;
-}
+.preview-container { width: 100%; height: 200px; border-radius: 12px; overflow: hidden; position: relative; background: #000; border: 1px solid var(--chat-border); }
+.preview-img { width: 100%; height: 100%; object-fit: contain; }
+.preview-actions { position: absolute; top: 10px; right: 10px; }
 
-.card-content p {
-  color: var(--chat-text-sub);
-  font-size: 14px;
-  line-height: 1.6;
-  margin: 0 0 32px 0;
-}
+:deep(.custom-textarea .el-textarea__inner) { background: rgba(0,0,0,0.1); border: 1px solid var(--chat-border); color: var(--chat-text); border-radius: 8px; }
+:deep(.custom-textarea .el-textarea__inner:focus) { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
 
-.card-action {
-  margin-top: auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: var(--chat-text);
-  font-weight: 600;
-  font-size: 15px;
-}
+.cancel-btn { background: transparent !important; border: 1px solid var(--chat-border) !important; color: var(--chat-text) !important; border-radius: 8px; }
+.submit-btn { background: #3b82f6 !important; border: none !important; border-radius: 8px; font-weight: 500; }
 
-.feature-card:hover .card-action {
-  color: #3b82f6;
-}
-
-.rt-card:hover .card-action {
-  color: #f97316;
-}
-
-/* ================= Element Plus 对话框重写 ================= */
-:deep(.mac-el-dialog) {
-  background: var(--chat-surface);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 16px;
-  border: 1px solid var(--chat-border);
-  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
-}
-
-:deep(.el-dialog__header) {
-  border-bottom: 1px solid var(--chat-border);
-  margin-right: 0;
-  padding: 20px 24px;
-}
-
-:deep(.el-dialog__title) {
-  color: var(--chat-text);
-  font-weight: 600;
-  font-size: 16px;
-}
-
-:deep(.el-dialog__body) {
-  padding: 24px;
-  color: var(--chat-text);
-}
-
-:deep(.el-dialog__footer) {
-  border-top: 1px solid var(--chat-border);
-  padding: 16px 24px;
-}
-
-:deep(.el-form-item__label) {
-  color: var(--chat-text);
-  font-weight: 500;
-}
-
-/* 上传区 */
-:deep(.el-upload-dragger) {
-  background: rgba(0,0,0,0.1);
-  border: 1px dashed var(--chat-border);
-  border-radius: 12px;
-  transition: all 0.3s;
-}
-:deep(.el-upload-dragger:hover) {
-  border-color: #3b82f6;
-  background: rgba(59, 130, 246, 0.05);
-}
-
-.preview-container {
-  width: 100%;
-  height: 200px;
-  border-radius: 12px;
-  overflow: hidden;
-  position: relative;
-  background: #000;
-  border: 1px solid var(--chat-border);
-}
-.preview-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.preview-actions {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-}
-
-/* 文本框 */
-:deep(.custom-textarea .el-textarea__inner) {
-  background: rgba(0,0,0,0.1);
-  border: 1px solid var(--chat-border);
-  color: var(--chat-text);
-  border-radius: 8px;
-}
-:deep(.custom-textarea .el-textarea__inner:focus) {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-}
-
-/* 按钮 */
-.cancel-btn {
-  background: transparent !important;
-  border: 1px solid var(--chat-border) !important;
-  color: var(--chat-text) !important;
-  border-radius: 8px;
-}
-.submit-btn {
-  background: #3b82f6 !important;
-  border: none !important;
-  border-radius: 8px;
-  font-weight: 500;
-}
-
-/* ================= 识别结果展示 ================= */
-.top-prediction {
-  text-align: center;
-  margin-bottom: 24px;
-  padding: 20px;
-  background: rgba(59, 130, 246, 0.1);
-  border-radius: 12px;
-  border: 1px solid rgba(59, 130, 246, 0.2);
-}
-.prediction-label {
-  font-size: 13px;
-  color: var(--chat-text-sub);
-  margin-bottom: 8px;
-}
-.prediction-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: #3b82f6;
-}
+.top-prediction { text-align: center; margin-bottom: 24px; padding: 20px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2); }
+.prediction-label { font-size: 13px; color: var(--chat-text-sub); margin-bottom: 8px; }
+.prediction-value { font-size: 28px; font-weight: 700; color: #3b82f6; }
 
 .result-item { margin-bottom: 16px; }
-.result-info {
-  display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; color: var(--chat-text);
-}
+.result-info { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; color: var(--chat-text); }
 .gem-score { color: #3b82f6; font-weight: 600; }
 
-.ai-analysis-card {
-  margin-top: 24px;
-  background: rgba(139, 92, 246, 0.1);
-  border: 1px solid rgba(139, 92, 246, 0.2);
-  border-radius: 12px;
-  padding: 16px;
-}
-.ai-analysis-header {
-  color: #a78bfa;
-  font-weight: 600;
-  margin-bottom: 12px;
-  font-size: 15px;
-}
-.ai-analysis-body {
-  color: var(--chat-text);
-  font-size: 14px;
-  line-height: 1.6;
-  white-space: pre-wrap;
-}
+.ai-analysis-card { margin-top: 24px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px; padding: 16px; }
+.ai-analysis-header { color: #a78bfa; font-weight: 600; margin-bottom: 12px; font-size: 15px; }
+.ai-analysis-body { color: var(--chat-text); font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
 
-.disclaimer {
-  margin-top: 24px;
-  text-align: center;
-  font-size: 12px;
-  color: var(--chat-text-sub);
-}
+.disclaimer { margin-top: 24px; text-align: center; font-size: 12px; color: var(--chat-text-sub); }
 
-/* ================= 实时视频样式 ================= */
-.video-wrapper {
-  position: relative;
-  width: 100%;
-  height: 400px;
-  background: #000;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid var(--chat-border);
-}
+.video-wrapper { position: relative; width: 100%; height: 400px; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--chat-border); }
+.rt-video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-.rt-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scaleX(-1); /* 镜面翻转 */
-}
+.rt-overlay-result { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); padding: 12px 32px; border-radius: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+.rt-top-label { color: #f97316; font-size: 24px; font-weight: bold; }
+.rt-sub-label { color: #cbd5e1; font-size: 13px; margin-top: 4px; }
 
-.rt-overlay-result {
-  position: absolute;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(8px);
-  padding: 12px 32px;
-  border-radius: 30px;
-  text-align: center;
-  border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-}
+/* 🔥 大屏的防溢出、深色背景专用样式 🔥 */
+:global(.market-dialog) { background: #0f172a !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important; border-radius: 16px !important; }
+:global(.market-dialog .el-dialog__header) { border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; padding: 20px 24px !important; margin-right: 0 !important; }
+:global(.market-dialog .el-dialog__title) { color: #f8fafc !important; font-weight: 600 !important; font-size: 1.1rem !important; }
+:global(.market-dialog .el-dialog__headerbtn .el-dialog__close) { color: #94a3b8 !important; font-size: 20px; }
+:global(.market-dialog .el-dialog__headerbtn:hover .el-dialog__close) { color: #f59e0b !important; }
 
-.rt-top-label {
-  color: #f97316; /* orange */
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.rt-sub-label {
-  color: #cbd5e1;
-  font-size: 13px;
-  margin-top: 4px;
+:global(.market-dialog .el-dialog__body) { 
+  padding: 0 !important; 
+  height: 70vh !important; 
+  min-height: 600px !important; 
+  background-color: transparent !important; 
+  display: flex !important; 
+  flex-direction: column !important; 
+  overflow: hidden !important; 
 }
 </style>
