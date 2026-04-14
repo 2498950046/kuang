@@ -35,6 +35,8 @@ src/assets/images/
 backend_all/backend/image_recognition/mineral_dataset/
 *.bin
 
+public/mineral_img_data/
+
 
 # 忽略深度学习模型
 *.bin

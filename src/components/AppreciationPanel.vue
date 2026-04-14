@@ -7,6 +7,17 @@
       <p>通过图像识别模型和多模态 AI，为您提供专业的矿物鉴定辅助。</p>
     </div>
 
+    <div class="model-selector-container">
+      <div class="model-selector-label">
+        <el-icon style="margin-right: 6px;"><Cpu /></el-icon>
+        选择底层 AI 识别引擎：
+      </div>
+      <el-select v-model="selectedModel" class="model-select" style="width: 340px;">
+        <el-option label="🌟 ConvNeXt-Tiny (满血最新版 - 极速推荐)" value="convnext" />
+        <el-option label="📦 EfficientNet-B3 (经典基础版)" value="efficientNetB3" />
+      </el-select>
+    </div>
+
     <div class="features-container">
       
       <div class="feature-card" @click="openDialog">
@@ -121,10 +132,14 @@
           </div>
         </div>
 
-        <div class="market-action-box" style="margin-top: 24px; text-align: center;">
-          <el-button type="warning" size="large" round @click="openMarketDashboard(resultData.top_prediction)" style="width: 100%; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); font-weight: bold; letter-spacing: 1px;">
-            <el-icon style="margin-right: 6px; font-size: 18px;"><TrendCharts /></el-icon>
-            查看市场价值与推荐拍品走势
+        <div class="action-buttons-group">
+          <el-button type="primary" size="large" round class="action-btn" @click="goToDetails(resultData.top_prediction)">
+            <el-icon class="btn-icon"><Document /></el-icon>
+            矿物详细百科
+          </el-button>
+          <el-button type="warning" size="large" round class="action-btn market-btn" @click="openMarketDashboard(resultData.top_prediction)">
+            <el-icon class="btn-icon"><TrendCharts /></el-icon>
+            市场行情走势
           </el-button>
         </div>
 
@@ -167,10 +182,14 @@
           </div>
         </div>
         
-        <div v-if="rtResultData && rtResultData.top_prediction" class="market-action-box" style="margin-top: 20px; text-align: center;">
-          <el-button type="warning" size="large" round @click="openMarketDashboard(rtResultData.top_prediction)" style="width: 100%; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); font-weight: bold; letter-spacing: 1px;">
-            <el-icon style="margin-right: 6px; font-size: 18px;"><TrendCharts /></el-icon>
-            查看市场价值与推荐拍品走势
+        <div v-if="rtResultData && rtResultData.top_prediction" class="action-buttons-group">
+          <el-button type="primary" size="large" round class="action-btn" @click="goToDetails(rtResultData.top_prediction)">
+            <el-icon class="btn-icon"><Document /></el-icon>
+            矿物详细百科
+          </el-button>
+          <el-button type="warning" size="large" round class="action-btn market-btn" @click="openMarketDashboard(rtResultData.top_prediction)">
+            <el-icon class="btn-icon"><TrendCharts /></el-icon>
+            市场行情走势
           </el-button>
         </div>
 
@@ -193,11 +212,15 @@
 
 <script setup lang="ts">
 import { ref, computed, onBeforeUnmount } from "vue";
-import { UploadFilled, Delete, TrendCharts } from "@element-plus/icons-vue"; 
+// 🔥 引入了 Document 页面图标
+import { UploadFilled, Delete, TrendCharts, Cpu, Document } from "@element-plus/icons-vue"; 
 import { ElMessage } from "element-plus";
 import CommodityDashboard from "../components/shangpin/CommodityDashboard.vue";
 
 const emit = defineEmits(['query-mineral']);
+
+// 默认选中我们最新的满血版模型
+const selectedModel = ref("convnext"); 
 
 // ================= 字典与翻译函数 =================
 const engToChnMap: Record<string, string> = {
@@ -225,18 +248,26 @@ const translateGemName = (enName: string | undefined) => {
   return engToChnMap[lowerName] || enName;
 };
 
-// === 🔥 双模式兼容的商品大盘状态逻辑 🔥 ===
-const marketDialogVisible = ref(false);
-const marketGemData = ref<any>(null); // 存储当前需要查看行情的宝石
+// ================= 🔥 新增：前往详情页逻辑 🔥 =================
+const goToDetails = (predictionName: string) => {
+  const cnName = translateGemName(predictionName);
+  ElMessage.success(`正在为您跳转至【${cnName}】标本详情页...`);
+  // 跳转到你指定的详情页URL
+  // 提示：如果你希望把识别到的名字传过去，可以改成 'http://localhost:5173/specimen-library/宝玉石?name=' + cnName
+  window.open('http://localhost:5173/specimen-library/宝玉石/' + cnName, '_self');
+};
 
-// 接收模型吐出来的预测英文名，转换为对象并打开大屏
+// === 市场大盘逻辑 (保持不变) ===
+const marketDialogVisible = ref(false);
+const marketGemData = ref<any>(null); 
+
 const openMarketDashboard = (predictionName: string) => {
   if (!predictionName) return;
   const cnName = translateGemName(predictionName);
   marketGemData.value = {
     name: cnName,
     type: predictionName,
-    color: '#F59E0B' // 图表默认主题色
+    color: '#F59E0B'
   };
   marketDialogVisible.value = true;
 };
@@ -291,11 +322,13 @@ const handleSubmit = async () => {
   
   loading.value = true;
   const fd = new FormData();
+  
+  fd.append("model", selectedModel.value);
   fd.append("file", form.value.file);
   if (form.value.text.trim()) fd.append("text", form.value.text.trim());
 
   try {
-    const response = await fetch("http://localhost:8080/api/gem/b3predict", {
+    const response = await fetch("http://localhost:8080/api/gem/predict", {
       method: "POST",
       body: fd,
     });
@@ -344,11 +377,11 @@ const openRtDialog = async () => {
       videoRef.value.srcObject = stream;
     }
 
-    ws = new WebSocket(`ws://localhost:8080/ws/gem/predict`);
+    ws = new WebSocket(`ws://localhost:8080/ws/gem/predict`); // 确保这个路径和你后端配置的 WebSocket 路径一致
     
     ws.onopen = () => {
       rtConnecting.value = false;
-      ElMessage.success("已连接实时引擎");
+      ElMessage.success(`已连接实时引擎 (${selectedModel.value})`);
       captureInterval = window.setInterval(captureAndSendFrame, 500);
     };
 
@@ -389,7 +422,7 @@ const captureAndSendFrame = () => {
   const base64Data = canvas.toDataURL('image/jpeg', 0.8);
   
   ws.send(JSON.stringify({
-    model: 'efficientNetB3',
+    model: selectedModel.value, 
     image: base64Data
   }));
 };
@@ -407,10 +440,16 @@ onBeforeUnmount(() => { closeRtDialog(); });
 <style scoped>
 .appreciation-panel { height: 100%; display: flex; flex-direction: column; padding: 40px; overflow-y: auto; background: transparent; }
 
-.welcome-section { text-align: center; margin-bottom: 40px; }
+.welcome-section { text-align: center; margin-bottom: 24px; }
 .welcome-icon { font-size: 48px; margin-bottom: 16px; }
 .welcome-section h3 { font-size: 24px; color: var(--chat-text); margin: 0 0 12px 0; }
 .welcome-section p { color: var(--chat-text-sub); font-size: 15px; max-width: 600px; margin: 0 auto; }
+
+.model-selector-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 40px; }
+.model-selector-label { display: flex; align-items: center; font-size: 14px; color: var(--chat-text-sub); margin-bottom: 10px; font-weight: 500; }
+:deep(.model-select .el-input__wrapper) { background-color: rgba(0, 0, 0, 0.15); box-shadow: 0 0 0 1px var(--chat-border) inset; border-radius: 8px; }
+:deep(.model-select .el-input__inner) { color: var(--chat-text); font-weight: 600; text-align: center; }
+:deep(.model-select.el-select:hover:not(.el-select--disabled) .el-input__wrapper) { box-shadow: 0 0 0 1px #3b82f6 inset; }
 
 .features-container { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; max-width: 900px; margin: 0 auto; }
 
@@ -461,6 +500,30 @@ onBeforeUnmount(() => { closeRtDialog(); });
 .ai-analysis-header { color: #a78bfa; font-weight: 600; margin-bottom: 12px; font-size: 15px; }
 .ai-analysis-body { color: var(--chat-text); font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
 
+/* 🔥 新增的双按钮布局样式 🔥 */
+.action-buttons-group {
+  margin-top: 24px;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  width: 100%;
+}
+.action-btn {
+  flex: 1;
+  font-weight: bold;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-icon {
+  margin-right: 6px;
+  font-size: 18px;
+}
+.market-btn {
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
 .disclaimer { margin-top: 24px; text-align: center; font-size: 12px; color: var(--chat-text-sub); }
 
 .video-wrapper { position: relative; width: 100%; height: 400px; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--chat-border); }
@@ -470,7 +533,6 @@ onBeforeUnmount(() => { closeRtDialog(); });
 .rt-top-label { color: #f97316; font-size: 24px; font-weight: bold; }
 .rt-sub-label { color: #cbd5e1; font-size: 13px; margin-top: 4px; }
 
-/* 🔥 大屏的防溢出、深色背景专用样式 🔥 */
 :global(.market-dialog) { background: #0f172a !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important; border-radius: 16px !important; }
 :global(.market-dialog .el-dialog__header) { border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; padding: 20px 24px !important; margin-right: 0 !important; }
 :global(.market-dialog .el-dialog__title) { color: #f8fafc !important; font-weight: 600 !important; font-size: 1.1rem !important; }

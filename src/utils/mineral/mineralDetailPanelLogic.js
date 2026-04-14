@@ -302,7 +302,7 @@ export function useMineralDetailPanelLogic({
   const mineralDescriptionKVs = computed(() => parseMineralDescriptionKVs(mineralDescription.value));
 
   // --- 样品轮播（宝玉石 + 非宝玉石） ---
-  const mineralImgModules = import.meta.glob('/src/assets/mineral_img_data/**/*.{jpg,png,jpeg,gif}', { eager: true });
+  const mineralImgModules = import.meta.glob('/mineral_img_data/**/*.{jpg,png,jpeg,gif}', { eager: true });
   let mineralFolderIndexCache = null;
 
   function getMineralFolderIndex() {
@@ -376,232 +376,318 @@ export function useMineralDetailPanelLogic({
     };
   }
 
+  // async function loadSpecimenSamples(name) {
+  //   resetSpecimenState();
+  //   if (!name) return;
+
+  //   // 特殊处理“刚玉族宝石”
+  //   if (name === '刚玉族宝石') {
+  //     const sapphireEnglishName = gemNameMap.get('蓝宝石');
+  //     const rubyEnglishName = gemNameMap.get('红宝石');
+
+  //     let allImages = [];
+  //     const modules = import.meta.glob('/src/assets/images/images/**/*.{jpg,png,jpeg,gif}', { eager: true });
+
+  //     const loadImageList = (enName) => {
+  //       if (!enName) return [];
+  //       const enNameLower = enName.toLowerCase();
+  //       return Object.keys(modules)
+  //         .filter((path) => {
+  //           const pathLower = path.toLowerCase();
+  //           return (
+  //             pathLower.includes(`/images/images/${enNameLower}/`) ||
+  //             pathLower.includes(`/images/images/${enNameLower}/`)
+  //           );
+  //         })
+  //         .map((path) => {
+  //           const module = modules[path];
+  //           return module?.default || module;
+  //         })
+  //         .filter(Boolean);
+  //     };
+
+  //     if (sapphireEnglishName) allImages = allImages.concat(loadImageList(sapphireEnglishName));
+  //     if (rubyEnglishName) allImages = allImages.concat(loadImageList(rubyEnglishName));
+
+  //     if (allImages.length > 0) {
+  //       specimenState.samples = [
+  //         {
+  //           sampleName: name,
+  //           description: '',
+  //           bigImages: allImages,
+  //           smallImages: allImages,
+  //         },
+  //       ];
+  //     } else {
+  //       specimenState.samples = [
+  //         {
+  //           sampleName: name,
+  //           description: '暂无图片',
+  //           bigImages: ['/specimen-placeholder.svg'],
+  //           smallImages: ['/specimen-placeholder.svg'],
+  //         },
+  //       ];
+  //     }
+
+  //     // 刚玉族宝石：节点第一次被点击就预加载所有图片，后续拖动更流畅
+  //     preloadSamplesImages(specimenState.samples);
+  //     return; // 刚玉族宝石处理完毕，直接返回
+  //   }
+
+  //   // 非刚玉族宝石且为“宝玉石”图谱，使用原有逻辑
+  //   if (selectedSpecimenType.value === '宝玉石') {
+  //     const englishName = gemNameMap.get(name);
+  //     if (!englishName) {
+  //       console.warn(`未在 gemsBasicInfo.csv 中找到 ${name} 的英文名。`);
+  //       specimenState.samples = [
+  //         {
+  //           sampleName: name,
+  //           description: '暂无图片',
+  //           bigImages: ['/specimen-placeholder.svg'],
+  //           smallImages: ['/specimen-placeholder.svg'],
+  //         },
+  //       ];
+  //       return;
+  //     }
+
+  //     try {
+  //       const modules = import.meta.glob('/src/assets/images/images/**/*.{jpg,png,jpeg,gif}', { eager: true });
+  //       const imageList = Object.keys(modules)
+  //         .filter((path) => {
+  //           const pathLower = path.toLowerCase();
+  //           const enNameLower = englishName.toLowerCase();
+  //           return (
+  //             pathLower.includes(`/images/images/${enNameLower}/`) ||
+  //             pathLower.includes(`/images/images/${enNameLower}/`)
+  //           );
+  //         })
+  //         .map((path) => {
+  //           const module = modules[path];
+  //           return module?.default || module;
+  //         })
+  //         .filter(Boolean);
+
+  //       if (imageList.length > 0) {
+  //         specimenState.samples = [
+  //           {
+  //             sampleName: name,
+  //             description: '',
+  //             bigImages: imageList,
+  //             smallImages: imageList,
+  //           },
+  //         ];
+  //       } else {
+  //         specimenState.samples = [
+  //           {
+  //             sampleName: name,
+  //             description: '暂无图片',
+  //             bigImages: ['/specimen-placeholder.svg'],
+  //             smallImages: ['/specimen-placeholder.svg'],
+  //           },
+  //         ];
+  //       }
+
+  //       // 宝玉石图谱：首次点击该矿物节点时，将该矿物的所有样品图片预加载
+  //       preloadSamplesImages(specimenState.samples);
+  //     } catch (e) {
+  //       console.error('加载宝玉石样品图片失败', e);
+  //       specimenState.samples = [
+  //         {
+  //           sampleName: name,
+  //           description: '加载失败',
+  //           bigImages: ['/specimen-placeholder.svg'],
+  //           smallImages: ['/specimen-placeholder.svg'],
+  //         },
+  //       ];
+  //     }
+  //   } else {
+  //     // 非宝玉石图谱：按需加载图片，索引首次点击时再建
+  //     try {
+  //       const nameTrimmed = (name || '').trim();
+  //       const folderIndex = getMineralFolderIndex();
+  //       const matchedFolders = [];
+
+  //       for (const folderName of folderIndex.keys()) {
+  //         const firstUnderscore = folderName.indexOf('_');
+  //         if (firstUnderscore === -1) continue;
+
+  //         const idPart = folderName.slice(0, firstUnderscore);
+  //         const namePart = folderName.slice(firstUnderscore + 1).replace(/^_+/, '').trim();
+  //         if (namePart !== nameTrimmed) continue;
+
+  //         const urlList = folderIndex.get(folderName);
+  //         if (!urlList || urlList.length === 0) continue;
+
+  //         const folderId = idPart ? parseInt(idPart, 10) : NaN;
+  //         matchedFolders.push({
+  //           folderName,
+  //           folderId: Number.isNaN(folderId) ? null : folderId,
+  //           urlList,
+  //         });
+  //       }
+
+  //       if (matchedFolders.length > 0) {
+  //         specimenState.samples = matchedFolders.map(() => ({
+  //           sampleName: name,
+  //           description: '',
+  //           bigImages: [],
+  //           smallImages: [],
+  //         }));
+
+  //         Promise.all(
+  //           matchedFolders.map((mf, i) => {
+  //             const urlList = mf.urlList || [];
+  //             const bigUrlList = urlList.filter((p) => /_big_/i.test(p));
+  //             const smallUrlList = urlList.filter((p) => /_small_/i.test(p));
+  //             const hasBigOrSmall = bigUrlList.length > 0 || smallUrlList.length > 0;
+
+  //             if (hasBigOrSmall) {
+  //               const bigList = bigUrlList.length ? bigUrlList : urlList;
+  //               const smallList = smallUrlList.length ? smallUrlList : urlList;
+  //               return Promise.resolve({
+  //                 index: i,
+  //                 bigImages: bigList?.length ? bigList : smallList?.length ? smallList : ['/specimen-placeholder.svg'],
+  //                 smallImages: smallList?.length ? smallList : bigList?.length ? bigList : ['/specimen-placeholder.svg'],
+  //               });
+  //             }
+
+  //             const list = urlList?.length ? urlList : ['/specimen-placeholder.svg'];
+  //             return Promise.resolve({ index: i, bigImages: list, smallImages: list });
+  //           }),
+  //         ).then((results) => {
+  //           results.forEach((r) => {
+  //             if (specimenState.samples[r.index]) {
+  //               specimenState.samples = specimenState.samples.map((s, j) =>
+  //                 j === r.index ? { ...s, bigImages: r.bigImages, smallImages: r.smallImages } : s,
+  //               );
+  //             }
+  //           });
+  //           // 非宝玉石图谱：当所有图片路径解析完毕后，一次性预加载所有样品图片
+  //           preloadSamplesImages(specimenState.samples);
+  //         });
+
+  //         matchedFolders.forEach(({ folderId }, index) => {
+  //           if (folderId != null) {
+  //             getSpecimenDescriptionByTable2Id(folderId)
+  //               .then((desc) => {
+  //                 if (specimenState.samples[index]) {
+  //                   specimenState.samples = specimenState.samples.map((s, i) =>
+  //                     i === index ? { ...s, description: desc || '' } : s,
+  //                   );
+  //                 }
+  //               })
+  //               .catch(() => {});
+  //           }
+  //         });
+  //       } else {
+  //         specimenState.samples = [
+  //           {
+  //             sampleName: name,
+  //             description: '暂无图片',
+  //             bigImages: ['/specimen-placeholder.svg'],
+  //             smallImages: ['/specimen-placeholder.svg'],
+  //           },
+  //         ];
+  //       }
+  //     } catch (e) {
+  //       console.error('从 mineral_img_data 加载矿物图片失败', e);
+  //       specimenState.samples = [
+  //         {
+  //           sampleName: name,
+  //           description: '加载失败',
+  //           bigImages: ['/specimen-placeholder.svg'],
+  //           smallImages: ['/specimen-placeholder.svg'],
+  //         },
+  //       ];
+  //     }
+  //   }
+  // }
+
   async function loadSpecimenSamples(name) {
     resetSpecimenState();
     if (!name) return;
 
-    // 特殊处理“刚玉族宝石”
+    // 🚀 核心秘籍：不再扫描文件夹，直接根据“每个矿石10张图”的规律拼接绝对路径！
+    // 假设你的图片现在全放在 public/mineral/ 目录下
+    const generateUrls = (folderName) => {
+      const urls = [];
+      for (let i = 1; i <= 10; i++) {
+        // 根据你真实的命名规律修改这里！例如可能是 ${i}.jpg 或 ${folderName}_${i}.jpg
+        urls.push(`/mineral/${folderName}/${i}.jpg`);
+      }
+      return urls;
+    };
+
+    // 1. 特殊处理：刚玉族宝石
     if (name === '刚玉族宝石') {
-      const sapphireEnglishName = gemNameMap.get('蓝宝石');
-      const rubyEnglishName = gemNameMap.get('红宝石');
-
+      const sapphireEn = gemNameMap.get('蓝宝石')?.toLowerCase();
+      const rubyEn = gemNameMap.get('红宝石')?.toLowerCase();
+      
       let allImages = [];
-      const modules = import.meta.glob('/src/assets/images/images/**/*.{jpg,png,jpeg,gif}', { eager: true });
-
-      const loadImageList = (enName) => {
-        if (!enName) return [];
-        const enNameLower = enName.toLowerCase();
-        return Object.keys(modules)
-          .filter((path) => {
-            const pathLower = path.toLowerCase();
-            return (
-              pathLower.includes(`/images/images/${enNameLower}/`) ||
-              pathLower.includes(`/images/images/${enNameLower}/`)
-            );
-          })
-          .map((path) => {
-            const module = modules[path];
-            return module?.default || module;
-          })
-          .filter(Boolean);
-      };
-
-      if (sapphireEnglishName) allImages = allImages.concat(loadImageList(sapphireEnglishName));
-      if (rubyEnglishName) allImages = allImages.concat(loadImageList(rubyEnglishName));
+      if (sapphireEn) allImages = allImages.concat(generateUrls(sapphireEn));
+      if (rubyEn) allImages = allImages.concat(generateUrls(rubyEn));
 
       if (allImages.length > 0) {
-        specimenState.samples = [
-          {
-            sampleName: name,
-            description: '',
-            bigImages: allImages,
-            smallImages: allImages,
-          },
-        ];
-      } else {
-        specimenState.samples = [
-          {
-            sampleName: name,
-            description: '暂无图片',
-            bigImages: ['/specimen-placeholder.svg'],
-            smallImages: ['/specimen-placeholder.svg'],
-          },
-        ];
+        specimenState.samples = [{
+          sampleName: name, description: '', bigImages: allImages, smallImages: allImages
+        }];
+        preloadSamplesImages(specimenState.samples);
       }
-
-      // 刚玉族宝石：节点第一次被点击就预加载所有图片，后续拖动更流畅
-      preloadSamplesImages(specimenState.samples);
-      return; // 刚玉族宝石处理完毕，直接返回
+      return;
     }
 
-    // 非刚玉族宝石且为“宝玉石”图谱，使用原有逻辑
+    // 2. 宝玉石图谱
     if (selectedSpecimenType.value === '宝玉石') {
       const englishName = gemNameMap.get(name);
       if (!englishName) {
-        console.warn(`未在 gemsBasicInfo.csv 中找到 ${name} 的英文名。`);
-        specimenState.samples = [
-          {
-            sampleName: name,
-            description: '暂无图片',
-            bigImages: ['/specimen-placeholder.svg'],
-            smallImages: ['/specimen-placeholder.svg'],
-          },
-        ];
+        specimenState.samples = [{ sampleName: name, description: '暂无图片', bigImages: ['/specimen-placeholder.svg'], smallImages: ['/specimen-placeholder.svg'] }];
         return;
       }
 
-      try {
-        const modules = import.meta.glob('/src/assets/images/images/**/*.{jpg,png,jpeg,gif}', { eager: true });
-        const imageList = Object.keys(modules)
-          .filter((path) => {
-            const pathLower = path.toLowerCase();
-            const enNameLower = englishName.toLowerCase();
-            return (
-              pathLower.includes(`/images/images/${enNameLower}/`) ||
-              pathLower.includes(`/images/images/${enNameLower}/`)
-            );
-          })
-          .map((path) => {
-            const module = modules[path];
-            return module?.default || module;
-          })
-          .filter(Boolean);
+      const enNameLower = englishName.toLowerCase();
+      const imageList = generateUrls(enNameLower);
 
-        if (imageList.length > 0) {
-          specimenState.samples = [
-            {
-              sampleName: name,
-              description: '',
-              bigImages: imageList,
-              smallImages: imageList,
-            },
-          ];
-        } else {
-          specimenState.samples = [
-            {
-              sampleName: name,
-              description: '暂无图片',
-              bigImages: ['/specimen-placeholder.svg'],
-              smallImages: ['/specimen-placeholder.svg'],
-            },
-          ];
-        }
+      specimenState.samples = [{
+        sampleName: name, description: '', bigImages: imageList, smallImages: imageList
+      }];
+      preloadSamplesImages(specimenState.samples);
+      return;
+    }
 
-        // 宝玉石图谱：首次点击该矿物节点时，将该矿物的所有样品图片预加载
-        preloadSamplesImages(specimenState.samples);
-      } catch (e) {
-        console.error('加载宝玉石样品图片失败', e);
-        specimenState.samples = [
-          {
-            sampleName: name,
-            description: '加载失败',
-            bigImages: ['/specimen-placeholder.svg'],
-            smallImages: ['/specimen-placeholder.svg'],
-          },
-        ];
-      }
-    } else {
-      // 非宝玉石图谱：按需加载图片，索引首次点击时再建
-      try {
-        const nameTrimmed = (name || '').trim();
-        const folderIndex = getMineralFolderIndex();
-        const matchedFolders = [];
+    // 3. 非宝玉石图谱（普通矿物）
+    try {
+      // 假设文件夹名是 ID_中文名 的格式
+      const mineralId = mineralDetail.value?.id || '';
+      const folderName = mineralId ? `${mineralId}_${name.trim()}` : name.trim();
+      
+      const imageList = generateUrls(folderName);
 
-        for (const folderName of folderIndex.keys()) {
-          const firstUnderscore = folderName.indexOf('_');
-          if (firstUnderscore === -1) continue;
+      specimenState.samples = [{
+        sampleName: name,
+        description: '',
+        bigImages: imageList,
+        smallImages: imageList
+      }];
 
-          const idPart = folderName.slice(0, firstUnderscore);
-          const namePart = folderName.slice(firstUnderscore + 1).replace(/^_+/, '').trim();
-          if (namePart !== nameTrimmed) continue;
-
-          const urlList = folderIndex.get(folderName);
-          if (!urlList || urlList.length === 0) continue;
-
-          const folderId = idPart ? parseInt(idPart, 10) : NaN;
-          matchedFolders.push({
-            folderName,
-            folderId: Number.isNaN(folderId) ? null : folderId,
-            urlList,
-          });
-        }
-
-        if (matchedFolders.length > 0) {
-          specimenState.samples = matchedFolders.map(() => ({
-            sampleName: name,
-            description: '',
-            bigImages: [],
-            smallImages: [],
-          }));
-
-          Promise.all(
-            matchedFolders.map((mf, i) => {
-              const urlList = mf.urlList || [];
-              const bigUrlList = urlList.filter((p) => /_big_/i.test(p));
-              const smallUrlList = urlList.filter((p) => /_small_/i.test(p));
-              const hasBigOrSmall = bigUrlList.length > 0 || smallUrlList.length > 0;
-
-              if (hasBigOrSmall) {
-                const bigList = bigUrlList.length ? bigUrlList : urlList;
-                const smallList = smallUrlList.length ? smallUrlList : urlList;
-                return Promise.resolve({
-                  index: i,
-                  bigImages: bigList?.length ? bigList : smallList?.length ? smallList : ['/specimen-placeholder.svg'],
-                  smallImages: smallList?.length ? smallList : bigList?.length ? bigList : ['/specimen-placeholder.svg'],
-                });
-              }
-
-              const list = urlList?.length ? urlList : ['/specimen-placeholder.svg'];
-              return Promise.resolve({ index: i, bigImages: list, smallImages: list });
-            }),
-          ).then((results) => {
-            results.forEach((r) => {
-              if (specimenState.samples[r.index]) {
-                specimenState.samples = specimenState.samples.map((s, j) =>
-                  j === r.index ? { ...s, bigImages: r.bigImages, smallImages: r.smallImages } : s,
-                );
-              }
-            });
-            // 非宝玉石图谱：当所有图片路径解析完毕后，一次性预加载所有样品图片
-            preloadSamplesImages(specimenState.samples);
-          });
-
-          matchedFolders.forEach(({ folderId }, index) => {
-            if (folderId != null) {
-              getSpecimenDescriptionByTable2Id(folderId)
-                .then((desc) => {
-                  if (specimenState.samples[index]) {
-                    specimenState.samples = specimenState.samples.map((s, i) =>
-                      i === index ? { ...s, description: desc || '' } : s,
-                    );
-                  }
-                })
-                .catch(() => {});
+      // 单独获取描述
+      if (mineralId) {
+        getSpecimenDescriptionByTable2Id(mineralId)
+          .then((desc) => {
+            if (specimenState.samples[0]) {
+              specimenState.samples[0].description = desc || '';
             }
-          });
-        } else {
-          specimenState.samples = [
-            {
-              sampleName: name,
-              description: '暂无图片',
-              bigImages: ['/specimen-placeholder.svg'],
-              smallImages: ['/specimen-placeholder.svg'],
-            },
-          ];
-        }
-      } catch (e) {
-        console.error('从 mineral_img_data 加载矿物图片失败', e);
-        specimenState.samples = [
-          {
-            sampleName: name,
-            description: '加载失败',
-            bigImages: ['/specimen-placeholder.svg'],
-            smallImages: ['/specimen-placeholder.svg'],
-          },
-        ];
+          })
+          .catch(() => {});
       }
+
+      preloadSamplesImages(specimenState.samples);
+
+    } catch (e) {
+      console.error('加载矿物图片失败', e);
+      specimenState.samples = [{ sampleName: name, description: '加载失败', bigImages: ['/specimen-placeholder.svg'], smallImages: ['/specimen-placeholder.svg'] }];
     }
   }
+  
 
   function setActiveSample(index) {
     if (!specimenState.samples.length) return;
