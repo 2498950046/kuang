@@ -13,8 +13,9 @@
         选择底层 AI 识别引擎：
       </div>
       <el-select v-model="selectedModel" class="model-select" style="width: 340px;">
-        <el-option label="🌟 ConvNeXt-Tiny (满血最新版 - 极速推荐)" value="convnext" />
-        <el-option label="📦 EfficientNet-B3 (经典基础版)" value="efficientNetB3" />
+        <el-option label="ConvNeXt-44种宝玉石(最新推荐版)" value="convnext" />
+        <el-option label="EfficientNetB3-44种宝玉石(稳定基础版)" value="efficientNetB3" />
+        <el-option label="ConvNeXt-557种矿物(Beta)" value="convnext_all" />
       </el-select>
     </div>
 
