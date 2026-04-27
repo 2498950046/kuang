@@ -73,18 +73,25 @@ import json
 import csv
 import mysql.connector
 import os
+from pathlib import Path
+
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / 'mineral_data_test'
+MYSQL_CONFIG = {
+    'host': os.getenv('DB_HOST', 'localhost'),
+    'port': int(os.getenv('DB_PORT', '3306')),
+    'user': os.getenv('DB_USER', 'root'),
+    'password': os.getenv('DB_PASSWORD', '123456'),
+    'database': os.getenv('DB_NAME', 'mineral_database'),
+    'charset': os.getenv('DB_CHARSET', 'utf8mb4')
+}
 
 
 def create_gems_table():
     """创建 gems 表"""
     try:
-        conn = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='123456',
-            database='mineral_database',
-            charset='utf8mb4'
-        )
+        conn = mysql.connector.connect(**MYSQL_CONFIG)
         cursor = conn.cursor()
         
         # 创建 gems 表
@@ -110,16 +117,38 @@ def create_gems_table():
         print(f"❌ 创建 gems 表出错: {e}")
 
 
+def create_gems_info_table():
+    """创建 gems_info 表"""
+    try:
+        conn = mysql.connector.connect(**MYSQL_CONFIG)
+        cursor = conn.cursor()
+
+        create_table_sql = """
+        CREATE TABLE IF NOT EXISTS gems_info (
+            id VARCHAR(50) PRIMARY KEY,
+            gem_name VARCHAR(100) NOT NULL,
+            basic_info JSON,
+            material_properties JSON,
+            treatments JSON,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+        """
+
+        cursor.execute(create_table_sql)
+        conn.commit()
+        print("✅ gems_info 表创建成功")
+
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"❌ 创建 gems_info 表出错: {e}")
+
+
 def import_csv_to_gems_table(csv_file_path):
     """从 CSV 文件导入数据到 gems 表"""
     try:
-        conn = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='123456',
-            database='mineral_database',
-            charset='utf8mb4'
-        )
+        conn = mysql.connector.connect(**MYSQL_CONFIG)
         cursor = conn.cursor()
         
         # 检查文件是否存在
@@ -167,13 +196,7 @@ def import_csv_to_gems_table(csv_file_path):
 def import_json_to_simple_table(json_file_path):
     """将JSON导入简化表"""
     try:
-        conn = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='123456',
-            database='mineral_database',
-            charset='utf8mb4'
-        )
+        conn = mysql.connector.connect(**MYSQL_CONFIG)
         cursor = conn.cursor()
 
         with open(json_file_path, 'r', encoding='utf-8') as file:
@@ -228,15 +251,17 @@ if __name__ == '__main__':
     print("=" * 60)
     print("开始创建 gems 表...")
     create_gems_table()
+    print("\n开始创建 gems_info 表...")
+    create_gems_info_table()
     
     # 2.导入 CSV 数据到 gems 表
     print("\n开始导入 CSV 数据到 gems 表...")
-    csv_path = './mineral_data_test/gemsBasicInfo.csv'
+    csv_path = DATA_DIR / 'gemsBasicInfo.csv'
     import_csv_to_gems_table(csv_path)
     
     # 3.导入宝玉石详细信息到mysql表 gems_info
     print("\n开始导入宝玉石详细信息到 gems_info 表...")
-    import_json_to_simple_table('./mineral_data_test/mydb.baoshi.json')
+    import_json_to_simple_table(DATA_DIR / 'mydb.baoshi.json')
     
     print("\n" + "=" * 60)
     print("✅ 所有操作完成！")

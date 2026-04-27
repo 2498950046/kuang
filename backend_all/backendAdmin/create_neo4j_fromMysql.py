@@ -1,7 +1,9 @@
 import pandas as pd
 from neo4j import GraphDatabase
 import logging
+import os
 import re
+from pathlib import Path
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -385,15 +387,16 @@ class Neo4jCSVImporter:
 
 def main():
     # Neo4j连接配置
-    NEO4J_URI = "bolt://localhost:7688"
-    NEO4J_USER = "neo4j"
-    NEO4J_PASSWORD = "12345678"
+    NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7688")
+    NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
+    NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "12345678")
+    DATA_DIR = Path(__file__).resolve().parent / 'mineral_data_test'
 
     # 初始化导入器
     importer = Neo4jCSVImporter(NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD)
 
     try:
-        csv_file = './mineral_data_test/矿物基本信息.csv'
+        csv_file = DATA_DIR / '矿物基本信息.csv'
 
         # 测试清理函数
         test_strings = [

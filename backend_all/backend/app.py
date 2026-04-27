@@ -19,7 +19,6 @@ from cache import cache_manager
 from neo4j_driver import driver
 from agent import OptimizedIntelligentAgent, executor
 from utils import generate_cache_key, allowed_file, generate_unique_filename
-from backend.image_module import image_classification_module, model_init
 from mineral_sample_service import get_samples_by_name
 import mysql.connector
 from mysql.connector import Error
@@ -40,15 +39,26 @@ def init_services():
     """初始化所有服务"""
     logger.info("正在初始化服务...")
 
+    app.config['image_model'] = None
+    app.config['image_classes'] = None
+    app.config['image_device'] = None
+    app.config['image_classification_module'] = None
+
     # 初始化图像模型
-    try:
-        inference_model, classes, device = model_init()
-        app.config['image_model'] = inference_model
-        app.config['image_classes'] = classes
-        app.config['image_device'] = device
-        logger.info("图像模型初始化完成")
-    except Exception as e:
-        logger.error(f"图像模型初始化失败: {str(e)}")
+    if config.ENABLE_IMAGE_MODEL:
+        try:
+            from backend.image_module import image_classification_module, model_init
+
+            inference_model, classes, device = model_init()
+            app.config['image_model'] = inference_model
+            app.config['image_classes'] = classes
+            app.config['image_device'] = device
+            app.config['image_classification_module'] = image_classification_module
+            logger.info("图像模型初始化完成")
+        except Exception as e:
+            logger.error(f"图像模型初始化失败: {str(e)}")
+    else:
+        logger.info("图像模型已关闭，当前 backend 仅提供图谱与问答相关能力")
 
     # 初始化ASR服务（已切换为百度语音识别，无需本地ASR初始化）
     # try:
@@ -166,6 +176,14 @@ def mineral_dec():
     if not os.path.exists(config.UPLOAD_FOLDER):
         os.makedirs(config.UPLOAD_FOLDER)
     try:
+        image_classification_module = app.config.get('image_classification_module')
+        if not config.ENABLE_IMAGE_MODEL or not image_classification_module:
+            return jsonify({
+                'code': 503,
+                'message': '当前服务未启用矿物识别模型，请使用 8080 的智能鉴赏服务',
+                'data': None
+            }), 503
+
         # 检查是否有文件在请求中
         if 'file' not in request.files:
             return jsonify({

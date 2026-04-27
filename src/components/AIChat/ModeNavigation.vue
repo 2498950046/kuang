@@ -31,12 +31,22 @@
         <span class="segment-text">智能鉴赏</span>
         <div v-if="currentMode === 'appreciation'" class="active-dot"></div>
       </button>
+
+      <button
+        class="segment-item"
+        :class="{ active: currentMode === 'deep-learning' }"
+        @click="emit('switch-mode', 'deep-learning')"
+      >
+        <Cpu class="seg-icon" :size="18" />
+        <span class="segment-text">&#28145;&#24230;&#23398;&#20064;&#24179;&#21488;</span>
+        <div v-if="currentMode === 'deep-learning'" class="active-dot"></div>
+      </button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { Search, MessageCircle, Mic } from 'lucide-vue-next';
+import { Search, MessageCircle, Mic, Cpu } from 'lucide-vue-next';
 
 const { currentMode } = defineProps({
   currentMode: { type: String, required: true },

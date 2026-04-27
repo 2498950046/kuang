@@ -1,0 +1,12 @@
+.git
+.idea
+dist
+node_modules
+src.zip
+records.json
+backend_all/backendAdmin/.venv
+backend_all/backendAdmin/__pycache__
+backend_all/backend/__pycache__
+**/__pycache__
+**/*.pyc
+deploy/.env.server

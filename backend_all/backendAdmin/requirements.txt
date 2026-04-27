@@ -1,8 +1,10 @@
 
 Flask==3.1.0
+Flask-Bcrypt==1.0.1
 flask-cors==5.0.1
 Flask-JWT-Extended==4.7.1
 Flask-SQLAlchemy==3.1.1
+gunicorn==23.0.0
 
 mypy_extensions==1.1.0
 mysql-connector-python==9.4.0
@@ -10,9 +12,11 @@ mysql-connector-python==9.4.0
 neo4j==5.28.2
 numpy
 opencv-python==4.8.0.76
+pandas==2.3.1
 py2neo==2021.2.4
 PyJWT==2.10.1
 PyMySQL==1.1.2
+python-dotenv==1.1.1
 redis==7.0.1
 # torch==2.3.1
 

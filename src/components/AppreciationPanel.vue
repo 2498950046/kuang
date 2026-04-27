@@ -55,6 +55,30 @@
         </div>
       </div>
 
+      <!-- <div class="feature-card dl-card" @click="openDeepLearningPlatform">
+        <div class="card-icon-box green-theme">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4" />
+            <path d="M12 18v4" />
+            <path d="M4.93 4.93l2.83 2.83" />
+            <path d="M16.24 16.24l2.83 2.83" />
+            <path d="M2 12h4" />
+            <path d="M18 12h4" />
+            <path d="M4.93 19.07l2.83-2.83" />
+            <path d="M16.24 7.76l2.83-2.83" />
+            <circle cx="12" cy="12" r="4" />
+          </svg>
+        </div>
+        <div class="card-content">
+          <h4>深度学习平台</h4>
+          <p>进入独立深度学习平台，直接切换到训练与推理页面。</p>
+        </div>
+        <div class="card-action">
+          <span>打开平台</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </div> -->
+
     </div>
 
     <el-dialog 
@@ -93,6 +117,8 @@
 
           <el-form-item label="文本描述 (可选补充)">
             <el-input
+
+            
               type="textarea"
               v-model="form.text"
               placeholder="例如：这是在哪里购买的，有什么明显的物理特征..."
@@ -218,6 +244,14 @@ import { UploadFilled, Delete, TrendCharts, Cpu, Document } from "@element-plus/
 import { ElMessage } from "element-plus";
 import CommodityDashboard from "../components/shangpin/CommodityDashboard.vue";
 
+const APP_HOST = '154.44.25.243';
+const IS_LOCAL_TEST = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const GEM_API_BASE = IS_LOCAL_TEST ? `http://${APP_HOST}:8080` : '/gem-api';
+const GEM_WS_BASE = IS_LOCAL_TEST
+  ? `ws://${APP_HOST}:8080`
+  : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/gem-ws`;
+const DEEP_LEARNING_URL = `http://${APP_HOST}:18080/`;
+
 const emit = defineEmits(['query-mineral']);
 
 // 默认选中我们最新的满血版模型
@@ -255,10 +289,14 @@ const goToDetails = (predictionName: string) => {
   ElMessage.success(`正在为您跳转至【${cnName}】标本详情页...`);
   // 跳转到你指定的详情页URL
   // 提示：如果你希望把识别到的名字传过去，可以改成 'http://localhost:5173/specimen-library/宝玉石?name=' + cnName
-  window.open('http://localhost:5173/specimen-library/宝玉石/' + cnName, '_self');
+  window.open(`${window.location.origin}/specimen-library/%E5%AE%9D%E7%8E%89%E7%9F%B3/${encodeURIComponent(cnName)}`, '_self');
 };
 
 // === 市场大盘逻辑 (保持不变) ===
+const openDeepLearningPlatform = () => {
+  window.open(DEEP_LEARNING_URL, '_self');
+};
+
 const marketDialogVisible = ref(false);
 const marketGemData = ref<any>(null); 
 
@@ -329,7 +367,7 @@ const handleSubmit = async () => {
   if (form.value.text.trim()) fd.append("text", form.value.text.trim());
 
   try {
-    const response = await fetch("http://localhost:8080/api/gem/predict", {
+    const response = await fetch(`${GEM_API_BASE}/api/gem/predict`, {
       method: "POST",
       body: fd,
     });
@@ -378,7 +416,7 @@ const openRtDialog = async () => {
       videoRef.value.srcObject = stream;
     }
 
-    ws = new WebSocket(`ws://localhost:8080/ws/gem/predict`); // 确保这个路径和你后端配置的 WebSocket 路径一致
+    ws = new WebSocket(`${GEM_WS_BASE}/ws/gem/predict`);
     
     ws.onopen = () => {
       rtConnecting.value = false;
@@ -461,6 +499,8 @@ onBeforeUnmount(() => { closeRtDialog(); });
 .card-icon-box { width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
 .blue-theme { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
 .orange-theme { background: rgba(249, 115, 22, 0.15); color: #f97316; }
+.green-theme { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+.dl-card:hover .card-action { color: #22c55e; }
 
 .card-content h4 { font-size: 20px; color: var(--chat-text); margin: 0 0 12px 0; }
 .card-content p { color: var(--chat-text-sub); font-size: 14px; line-height: 1.6; margin: 0 0 32px 0; }

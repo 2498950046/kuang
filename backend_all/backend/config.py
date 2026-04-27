@@ -2,6 +2,17 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+
+def _build_db_config():
+    return {
+        'host': os.getenv("DB_HOST", "localhost"),
+        'port': int(os.getenv("DB_PORT", "3306")),
+        'user': os.getenv("DB_USER", "root"),
+        'password': os.getenv("DB_PASSWORD", "123456"),
+        'database': os.getenv("DB_NAME", "mineral_database"),
+        'charset': os.getenv("DB_CHARSET", "utf8mb4")
+    }
+
 @dataclass
 class Config:
     '''
@@ -45,6 +56,7 @@ class Config:
     MAX_WORKERS: int = int(os.getenv("MAX_WORKERS", "4"))
     MAX_RETRIES: int = int(os.getenv("MAX_RETRIES", "2"))
     REQUEST_TIMEOUT: int = int(os.getenv("REQUEST_TIMEOUT", "30"))
+    ENABLE_IMAGE_MODEL: bool = os.getenv("ENABLE_IMAGE_MODEL", "false").lower() == "true"
 
     # 图片上传配置
     ROOT_DIR = Path(__file__).parent
@@ -156,13 +168,7 @@ class Config:
 
     # 宝玉石mysql数据库配置
     # 数据库配置
-    DB_CONFIG = {
-        'host': 'localhost',
-        'user': 'root',  # 修改为您的用户名
-        'password': '123456',  # 修改为您的密码
-        'database': 'mineral_database',  # 确保这是您的数据库名
-        'charset': 'utf8mb4'
-    }
+    DB_CONFIG = _build_db_config()
 
     # 百度语音识别配置
     API_KEY = "1nYv7Ew43IR0DR5sPGOU6aeb"

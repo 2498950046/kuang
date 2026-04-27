@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="mac-window-container" ref="containerRef">
     <div class="mac-layout" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
       <aside class="mac-sidebar" ref="sidebarRef">
@@ -28,6 +28,9 @@
             <button class="mac-mini-btn" :class="{ active: currentMode === 'appreciation' }" @click="switchMode('appreciation')" title="智能鉴赏">
               <MessageCircle :size="18" />
             </button>
+            <button class="mac-mini-btn" :class="{ active: currentMode === 'deep-learning' }" @click="switchMode('deep-learning')" title="深度学习平台">
+              <Search :size="18" />
+            </button>
           </div>
         </div>
 
@@ -48,13 +51,22 @@
       <section class="mac-main">
         <header class="mac-header">
           <div class="header-title-group">
-            <h2 class="title">{{ currentMode === 'nl2cypher' ? '知识图谱查询' : currentMode === 'appreciation' ? '智能鉴赏' : '智能助手问答' }}</h2>
+            <h2 class="title">{{ headerTitle }}</h2>
             <p class="subtitle">基于全量矿物数据图谱</p>
           </div>
         </header>
 
         <div v-if="currentMode === 'appreciation'" class="appreciation-viewport">
           <AppreciationPanel @query-mineral="handleQueryMineral" />
+        </div>
+
+        <div v-else-if="currentMode === 'deep-learning'" class="deep-learning-viewport">
+          <iframe
+            class="deep-learning-frame"
+            :src="deepLearningUrl"
+            title="深度学习平台"
+            frameborder="0"
+          ></iframe>
         </div>
 
         <div v-else class="chat-viewport">
@@ -138,6 +150,11 @@ import ModeNavigation from './AIChat/ModeNavigation.vue';
 import RecentHistory from './AIChat/RecentHistory.vue';
 import ChatMessages from './AIChat/ChatMessages.vue';
 
+const APP_HOST = '154.44.25.243';
+const IS_LOCAL_TEST = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const QA_API_BASE = IS_LOCAL_TEST ? `http://${APP_HOST}:8081` : '/qa-api';
+const deepLearningUrl = 'http://154.44.25.243:18080/';
+
 const currentFoldIcon = foldIcon;
 const currentUnfoldIcon = unfoldIcon;
 
@@ -148,7 +165,7 @@ const currentMode = ref('nl2cypher');
 const isSidebarCollapsed = ref(false);
 const inputMessage = ref('');
 const isLoading = ref(false);
-const messagesStore = reactive({ nl2cypher: [], rag: [], appreciation: [] });
+const messagesStore = reactive({ nl2cypher: [], rag: [], appreciation: [], 'deep-learning': [] });
 const conversationHistory = ref([]);
 const currentConversationId = ref(null);
 const chatMessagesRef = ref(null);
@@ -175,6 +192,12 @@ let mediaRecorder = null;
 let audioChunks = [];
 
 const currentMessages = computed(() => messagesStore[currentMode.value] || []);
+const headerTitle = computed(() => {
+  if (currentMode.value === 'nl2cypher') return '知识图谱查询';
+  if (currentMode.value === 'appreciation') return '智能鉴赏';
+  if (currentMode.value === 'deep-learning') return '深度学习平台';
+  return '智能助手问答';
+});
 
 const historyItems = computed(() => {
   const normalizeTime = (t) => (t instanceof Date ? t : new Date(t));
@@ -255,7 +278,7 @@ const openConversation = async (id) => {
     if (match) {
       const memoryId = parseInt(match[1]);
       try {
-        const res = await fetch(`http://localhost:8081/ai/history/${memoryId}`, { credentials: 'include' });
+        const res = await fetch(`${QA_API_BASE}/ai/history/${memoryId}`, { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
           if (data && data.length > 0) {
@@ -353,7 +376,6 @@ const sendMessage = async () => {
 const handleRAGStream = async (q) => {
   const msgId = generateMessageId();
   
-  // 1. 初始化气泡并记录索引位置
   const aiMessageIndex = messagesStore.rag.length;
   messagesStore.rag.push({
     id: msgId, type: 'assistant', mode: 'rag', content: '', timestamp: new Date(), success: true, references: []
@@ -361,7 +383,6 @@ const handleRAGStream = async (q) => {
   
   currentStreamingMessageId.value = msgId;
 
-  // 2. 从 Vue 会话 ID 中提取 memoryId
   let memoryId = Date.now(); 
   if (currentConversationId.value) {
     const match = currentConversationId.value.match(/conv_(\d+)_/);
@@ -369,16 +390,24 @@ const handleRAGStream = async (q) => {
   }
 
   try {
-    // 3. 获取 chatId
-    await fetch('http://localhost:8081/ai/chat_id', {
+    const chatIdResponse = await fetch(`${QA_API_BASE}/ai/chat_id`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ memoryId: memoryId }),
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        memoryId: memoryId
+      }),
       credentials: 'include'
     });
 
-    // 4. 发起真正的流式请求
-    const response = await fetch('http://localhost:8081/ai/chat_two_step', {
+    if (!chatIdResponse.ok) {
+      throw new Error(`获取chat_id失败：${chatIdResponse.status}`);
+    }
+
+    await chatIdResponse.text();
+
+    const response = await fetch(`${QA_API_BASE}/ai/chat_two_step`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -389,31 +418,32 @@ const handleRAGStream = async (q) => {
     });
 
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response.body) throw new Error('浏览器未获取到可读流');
+
     const reader = response.body.getReader();
     const decoder = new TextDecoder('utf-8');
 
-    // 5. 流式读取（彻底回归你一开始的最快写法）
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
       const chunk = decoder.decode(value, { stream: true });
       if (chunk) {
-        // 🌟 直接对属性进行追加，Vue 会瞬间捕捉并渲染出打字机效果！
         messagesStore.rag[aiMessageIndex].content += chunk;
-        streamingMessage.value = messagesStore.rag[aiMessageIndex].content; 
-        
+        streamingMessage.value = messagesStore.rag[aiMessageIndex].content;
         scrollToBottom();
       }
     }
 
-    // 6. 流结束后的扫尾工作（拉取参考资料）
     currentStreamingMessageId.value = null;
     streamingMessage.value = '';
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const historyRes = await fetch(`http://localhost:8081/ai/history/${memoryId}`, {
+    const historyRes = await fetch(`${QA_API_BASE}/ai/history/${memoryId}`, {
       method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       credentials: 'include'
     });
     
@@ -424,7 +454,6 @@ const handleRAGStream = async (q) => {
         if (lastItem.reference_materials) {
           try {
             const refs = JSON.parse(lastItem.reference_materials);
-            // 直接赋值新数组
             messagesStore.rag[aiMessageIndex].references = refs;
           } catch(e){}
         }
@@ -436,7 +465,7 @@ const handleRAGStream = async (q) => {
 
   } catch (error) {
     console.error('RAG 流式请求失败:', error);
-    messagesStore.rag[aiMessageIndex].content += `\n\n❌ 服务异常: ${error.message}`;
+    messagesStore.rag[aiMessageIndex].content += `\n\n服务异常: ${error.message}`;
     messagesStore.rag[aiMessageIndex].success = false;
 
     currentStreamingMessageId.value = null;
@@ -666,4 +695,17 @@ onMounted(() => {
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.deep-learning-viewport {
+  flex: 1;
+  min-height: 0;
+  padding: 0 24px 24px;
+}
+.deep-learning-frame {
+  width: 100%;
+  height: 100%;
+  min-height: calc(100vh - 220px);
+  border: 1px solid var(--chat-border);
+  border-radius: 18px;
+  background: #0f172a;
+}
 </style>

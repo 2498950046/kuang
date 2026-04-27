@@ -1,4 +1,7 @@
-const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const APP_HOST = '154.44.25.243';
+const IS_LOCAL_TEST = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const API_BASE = IS_LOCAL_TEST ? `http://${APP_HOST}:5000` : '/backend';
+const QA_API_BASE = IS_LOCAL_TEST ? `http://${APP_HOST}:8081` : '/qa-api';
 
 const withBase = (path) => `${API_BASE}${path}`;
 
@@ -142,7 +145,7 @@ export async function fetchSchema() {
 export const ragStream = async (payload, callbacks) => {
   try {
     // 换成你的 Spring Boot 地址
-    const response = await fetch('http://localhost:8081/ai/chat_two_step', {
+    const response = await fetch(`${QA_API_BASE}/ai/chat_two_step`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

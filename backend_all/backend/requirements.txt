@@ -3,6 +3,7 @@ flask-cors
 neo4j
 gunicorn
 mysql-connector-python
-openai-whisper
-torch
+openai
+redis
+requests
 psutil

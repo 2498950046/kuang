@@ -1,5 +1,26 @@
 // 后台管理接口基址：优先使用 VITE_ADMIN_API_URL，没有则回退到 VITE_API_URL
-const API_BASE = (import.meta.env.VITE_ADMIN_API_URL || import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const APP_HOST = import.meta.env.VITE_APP_HOST || '154.44.25.243';
+const IS_LOCAL_TEST = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+function normalizeBase(url) {
+  return (url || '').trim().replace(/\/+$/, '');
+}
+
+function resolveApiBase() {
+  const adminApiUrl = normalizeBase(import.meta.env.VITE_ADMIN_API_URL);
+  if (adminApiUrl) {
+    return adminApiUrl;
+  }
+
+  const apiUrl = normalizeBase(import.meta.env.VITE_API_URL);
+  if (apiUrl) {
+    return apiUrl;
+  }
+
+  return IS_LOCAL_TEST ? `http://${APP_HOST}:5002` : '/admin-api';
+}
+
+const API_BASE = resolveApiBase();
 
 const TOKEN_KEY = 'admin_token';
 const USERNAME_KEY = 'admin_username';
@@ -95,4 +116,3 @@ export const adminState = {
   TOKEN_KEY,
   USERNAME_KEY,
 };
-
