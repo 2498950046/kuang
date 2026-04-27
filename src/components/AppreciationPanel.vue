@@ -244,13 +244,13 @@ import { UploadFilled, Delete, TrendCharts, Cpu, Document } from "@element-plus/
 import { ElMessage } from "element-plus";
 import CommodityDashboard from "../components/shangpin/CommodityDashboard.vue";
 
-const APP_HOST = '154.44.25.243';
+const APP_HOST = import.meta.env.VITE_APP_HOST || '154.44.25.243';
 const IS_LOCAL_TEST = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 const GEM_API_BASE = IS_LOCAL_TEST ? `http://${APP_HOST}:8080` : '/gem-api';
 const GEM_WS_BASE = IS_LOCAL_TEST
   ? `ws://${APP_HOST}:8080`
   : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/gem-ws`;
-const DEEP_LEARNING_URL = `http://${APP_HOST}:18080/`;
+const DEEP_LEARNING_URL = import.meta.env.VITE_DEEP_LEARNING_URL || `http://${APP_HOST}:18080/`;
 
 const emit = defineEmits(['query-mineral']);
 
@@ -402,18 +402,65 @@ let stream: MediaStream | null = null;
 let ws: WebSocket | null = null;
 let captureInterval: number | null = null;
 
+const ensureBrowserCameraAvailable = () => {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    throw new Error("当前浏览器不支持摄像头访问，请使用最新版 Chrome、Edge 或 Safari");
+  }
+
+  if (!window.isSecureContext && !IS_LOCAL_TEST) {
+    throw new Error("线上访问浏览器摄像头必须使用 HTTPS 或 localhost，当前部署地址不是安全上下文");
+  }
+};
+
+const openBrowserCamera = async () => {
+  const candidateConstraints: MediaStreamConstraints[] = [
+    {
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 400 },
+        height: { ideal: 400 },
+      },
+      audio: false,
+    },
+    {
+      video: {
+        facingMode: { ideal: "user" },
+        width: { ideal: 400 },
+        height: { ideal: 400 },
+      },
+      audio: false,
+    },
+    {
+      video: true,
+      audio: false,
+    },
+  ];
+
+  let lastError: unknown = null;
+
+  for (const constraints of candidateConstraints) {
+    try {
+      return await navigator.mediaDevices.getUserMedia(constraints);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error("无法打开当前浏览器摄像头");
+};
+
 const openRtDialog = async () => {
   rtDialogVisible.value = true;
   rtConnecting.value = true;
   rtResultData.value = null;
   
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ 
-      video: { facingMode: "environment", width: 400, height: 400 } 
-    });
+    ensureBrowserCameraAvailable();
+    stream = await openBrowserCamera();
     
     if (videoRef.value) {
       videoRef.value.srcObject = stream;
+      await videoRef.value.play?.().catch(() => {});
     }
 
     ws = new WebSocket(`${GEM_WS_BASE}/ws/gem/predict`);
@@ -438,6 +485,12 @@ const openRtDialog = async () => {
     ws.onerror = () => {
       ElMessage.error("WebSocket 连接发生错误");
       rtConnecting.value = false;
+    };
+
+    ws.onclose = () => {
+      if (rtDialogVisible.value) {
+        rtConnecting.value = false;
+      }
     };
 
   } catch (err: any) {

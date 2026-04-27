@@ -43,8 +43,7 @@
 
         <div class="sidebar-copyright" v-if="!isSidebarCollapsed">
           <div>Copyright © 2026</div>
-          <div>三秋二月创新创业工作室</div>
-          <div>成都理工大学</div>
+          
         </div>
       </aside>
 

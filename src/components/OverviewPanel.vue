@@ -33,7 +33,7 @@
       <p>请尝试其他查询</p>
     </div>
 
-    <div class="overview-copyright">Copyright © 2026  三秋二月创新创业工作室 • 成都理工大学</div>
+    <div class="overview-copyright">Copyright © 2026</div>
   </div>
 </template>
 
