@@ -18,7 +18,6 @@ from app.zip_preview import profile_zip, read_zip_rows
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])
 
-MAX_BYTES = 500 * 1024 * 1024
 DEFAULT_PREVIEW_ROWS = 200
 UPLOAD_CHUNK_SIZE = 1024 * 1024
 
@@ -37,7 +36,8 @@ async def _save_upload_file(file: UploadFile, dest: Path, max_bytes: int) -> int
                     break
                 total += len(chunk)
                 if total > max_bytes:
-                    raise HTTPException(400, "File too large (max 500MB)")
+                    max_mb = max_bytes / (1024 * 1024)
+                    raise HTTPException(400, f"File too large (max {max_mb:.0f}MB)")
                 handle.write(chunk)
     except Exception:
         dest.unlink(missing_ok=True)
@@ -75,7 +75,7 @@ async def upload_dataset(
     upload_root = Path(settings.upload_dir)
     upload_root.mkdir(parents=True, exist_ok=True)
     dest = upload_root / filename
-    size_bytes = await _save_upload_file(file, dest, MAX_BYTES)
+    size_bytes = await _save_upload_file(file, dest, int(settings.upload_max_bytes))
 
     cols: list[str] = []
     samples = 0

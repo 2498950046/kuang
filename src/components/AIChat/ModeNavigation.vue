@@ -38,7 +38,7 @@
         @click="emit('switch-mode', 'deep-learning')"
       >
         <Cpu class="seg-icon" :size="18" />
-        <span class="segment-text">&#28145;&#24230;&#23398;&#20064;&#24179;&#21488;</span>
+        <span class="segment-text">算法模型可视化平台</span>
         <div v-if="currentMode === 'deep-learning'" class="active-dot"></div>
       </button>
     </div>

@@ -28,7 +28,7 @@
             <button class="mac-mini-btn" :class="{ active: currentMode === 'appreciation' }" @click="switchMode('appreciation')" title="智能鉴赏">
               <MessageCircle :size="18" />
             </button>
-            <button class="mac-mini-btn" :class="{ active: currentMode === 'deep-learning' }" @click="switchMode('deep-learning')" title="深度学习平台">
+            <button class="mac-mini-btn" :class="{ active: currentMode === 'deep-learning' }" @click="switchMode('deep-learning')" title="算法模型可视化平台">
               <Search :size="18" />
             </button>
           </div>
@@ -63,7 +63,7 @@
           <iframe
             class="deep-learning-frame"
             :src="deepLearningUrl"
-            title="深度学习平台"
+            title="算法模型可视化平台"
             frameborder="0"
           ></iframe>
         </div>
@@ -194,7 +194,7 @@ const currentMessages = computed(() => messagesStore[currentMode.value] || []);
 const headerTitle = computed(() => {
   if (currentMode.value === 'nl2cypher') return '知识图谱查询';
   if (currentMode.value === 'appreciation') return '智能鉴赏';
-  if (currentMode.value === 'deep-learning') return '深度学习平台';
+  if (currentMode.value === 'deep-learning') return '算法模型可视化平台';
   return '智能助手问答';
 });
 

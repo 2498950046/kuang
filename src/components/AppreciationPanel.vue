@@ -70,7 +70,7 @@
           </svg>
         </div>
         <div class="card-content">
-          <h4>深度学习平台</h4>
+          <h4>算法模型可视化平台</h4>
           <p>进入独立深度学习平台，直接切换到训练与推理页面。</p>
         </div>
         <div class="card-action">
